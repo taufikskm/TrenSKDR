@@ -678,21 +678,45 @@ function updateDataTable(data1, data2, minggu, tahun1, tahun2){
 const tbody = document.getElementById("tableBody");
 tbody.innerHTML = "";
 
-// Find the last valid (non-null) week index for each year
-let lastValidIndex1 = data1.length - 1;
-while(lastValidIndex1 >= 0 && (data1[lastValidIndex1] === null || data1[lastValidIndex1] === undefined)){
-lastValidIndex1--;
+// Determine which year is more recent (tahun2 is usually the newer year)
+const year1 = parseInt(tahun1);
+const year2 = parseInt(tahun2);
+const newerYear = year2 >= year1 ? tahun2 : tahun1;
+const olderYear = year2 >= year1 ? tahun1 : tahun2;
+const newerData = year2 >= year1 ? data2 : data1;
+const olderData = year2 >= year1 ? data1 : data2;
+
+// Find the last valid week starting from the most recent year first
+let lastValidIndex = -1;
+let sourceYear = "";
+
+// Check newer year first
+for(let i = newerData.length - 1; i >= 0; i--){
+if(newerData[i] !== null && newerData[i] !== undefined){
+lastValidIndex = i;
+sourceYear = newerYear;
+break;
+}
 }
 
-let lastValidIndex2 = data2.length - 1;
-while(lastValidIndex2 >= 0 && (data2[lastValidIndex2] === null || data2[lastValidIndex2] === undefined)){
-lastValidIndex2--;
+// If no valid data in newer year, check older year
+if(lastValidIndex === -1){
+for(let i = olderData.length - 1; i >= 0; i--){
+if(olderData[i] !== null && olderData[i] !== undefined){
+lastValidIndex = i;
+sourceYear = olderYear;
+break;
+}
+}
 }
 
-// Use the maximum of both to determine display range
-const lastValidIndex = Math.max(lastValidIndex1, lastValidIndex2);
+// If still no valid data, use the last week of newer year
+if(lastValidIndex === -1){
+lastValidIndex = minggu.length - 1;
+sourceYear = newerYear;
+}
 
-// Get last 8 valid weeks for display (starting from last valid week)
+// Get last 8 weeks for display (starting from last valid week)
 const startIndex = Math.max(0, lastValidIndex - 7);
 const displayWeeks = minggu.slice(startIndex, lastValidIndex + 1);
 
