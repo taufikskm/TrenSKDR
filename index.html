@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Dashboard SKDR Nasional</title>
+<title>Dashboard SKDR Nasional | PHEOC Style</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -18,15 +18,23 @@
 <!-- ================= SIDEBAR ================= -->
 <div id="sidebar" class="sidebar">
 
-<h2>SKDR</h2>
+<div class="sidebar-header">
+<h2>🩺 SKDR</h2>
+<p>Sistem Kewaspadaan Dini</p>
+</div>
 
-<a href="#">🏠 Dashboard</a>
+<nav class="sidebar-nav">
+<a href="#" class="active">🏠 Dashboard</a>
 <a href="#">📈 Tren Penyakit</a>
 <a href="#">📊 Perbandingan</a>
-<a href="#">🗂 Rekap</a>
+<a href="#">🗂 Rekap Data</a>
 <a href="#">⚙️ Setting</a>
+</nav>
 
-<a href="#">Created by Muhtof</a>
+<div class="sidebar-footer">
+<p>Created by</p>
+<h4>Muhtof</h4>
+</div>
 
 </div>
 
@@ -34,57 +42,155 @@
 <!-- ================= MAIN ================= -->
 <div id="main" class="main">
 
-<header>
+<!-- ===== TOP HEADER ===== -->
+<header class="main-header">
 <button id="toggleBtn" class="hamburger">☰</button>
+<div class="header-title">
 <h1>Dashboard Penyakit Mingguan Nasional</h1>
+<p>Monitoring Kesehatan Masyarakat Indonesia</p>
+</div>
+<div class="header-date" id="currentDate"></div>
 </header>
 
-<div class="filter">
-
-<select id="penyakitSelect"></select>
-
-<select id="tahun1"></select>
-
-<select id="tahun2"></select>
-
-<button onclick="updateChart()">Bandingkan</button>
-
+<!-- ===== SUMMARY CARDS ===== -->
+<div class="summary-cards">
+<div class="card card-blue">
+<div class="card-icon">📊</div>
+<div class="card-content">
+<h3>Total Penyakit</h3>
+<p class="card-value" id="totalPenyakit">-</p>
+<p class="card-label">Jenis penyakit terdata</p>
+</div>
 </div>
 
+<div class="card card-green">
+<div class="card-icon">📅</div>
+<div class="card-content">
+<h3>Periode Data</h3>
+<p class="card-value">2024 - 2026</p>
+<p class="card-label">Data mingguan tersedia</p>
+</div>
+</div>
+
+<div class="card card-orange">
+<div class="card-icon">🔥</div>
+<div class="card-content">
+<h3>Kasus Tertinggi</h3>
+<p class="card-value" id="topDisease">-</p>
+<p class="card-label" id="topDiseaseValue">-</p>
+</div>
+</div>
+
+<div class="card card-red" id="alertCard">
+<div class="card-icon">⚠️</div>
+<div class="card-content">
+<h3>Status Alert</h3>
+<p class="card-value" id="alertStatus">Waspada</p>
+<p class="card-label" id="alertLevel">Level: Moderate</p>
+</div>
+</div>
+</div>
+
+<!-- ===== FILTER SECTION ===== -->
+<div class="filter-section">
+<div class="filter-header">
+<h3>🔍 Filter Data</h3>
+</div>
+<div class="filter-content">
+<div class="filter-group">
+<label>Penyakit</label>
+<select id="penyakitSelect"></select>
+</div>
+<div class="filter-group">
+<label>Tahun 1</label>
+<select id="tahun1"></select>
+</div>
+<div class="filter-group">
+<label>Tahun 2</label>
+<select id="tahun2"></select>
+</div>
+<button onclick="updateChart()" class="btn-primary">Bandingkan Data</button>
+</div>
+</div>
+
+<!-- ===== MAIN CHART ===== -->
+<div class="chart-section">
+<div class="chart-header">
+<h3>📈 Grafik Perbandingan Penyakit</h3>
+<div class="chart-badge" id="mainChartBadge">Live Data</div>
+</div>
 <div class="chart-container">
 <canvas id="chart"></canvas>
 </div>
-
-<!-- ================= PENYAKIT 4 DAN 12 MINGGU SECTION ================= -->
-<div class="penyakit-section">
-<h2 class="penyakit-title" id="secondaryTitle">TREN PENYAKIT BERDASARKAN SKDR</h2>
-
-
-
-<div class="penyakit-container">
-<!-- ===== LEFT: MAIN PENYAKIT CHART ===== -->
-<div class="penyakit-main-chart">
-<div class="penyakit-legend" id="penyakitLegend">
-<span class="y2025" id="legend2025">---- 2025</span>
-<span class="y2026" id="legend2026">---- 2026</span>
 </div>
 
+<!-- ===== SECONDARY CHARTS SECTION ===== -->
+<div class="secondary-section">
+<div class="section-header">
+<h2 class="section-title" id="secondaryTitle">TREN PENYAKIT BERDASARKAN SKDR</h2>
+<div class="section-badges">
+<span class="badge badge-2024" id="legend2024" style="display:none">● 2024</span>
+<span class="badge badge-2025" id="legend2025">● 2025</span>
+<span class="badge badge-2026" id="legend2026">● 2026</span>
+</div>
+
+</div>
+
+<div class="secondary-container">
+<!-- ===== LEFT: MAIN TREND CHART ===== -->
+<div class="trend-chart-box">
+<div class="trend-header">
+<h4>Tren Keseluruhan</h4>
+</div>
 <canvas id="penyakitMainChart"></canvas>
 </div>
 
 <!-- ===== RIGHT: MINI CHARTS ===== -->
-<div class="penyakit-side">
-<div class="penyakit-mini-card">
-
-<h3>12 MINGGU AKHIR</h3>
+<div class="mini-charts-box">
+<div class="mini-card mini-12">
+<div class="mini-header">
+<span class="mini-icon">📊</span>
+<h4>12 MINGGU TERAKHIR</h4>
+</div>
+<div class="mini-chart-wrap">
 <canvas id="penyakitChart12"></canvas>
 </div>
-<div class="penyakit-mini-card">
-<h3>4 MINGGU AKHIR</h3>
-<canvas id="penyakitChart4"></canvas>
+</div>
 
+<div class="mini-card mini-4">
+<div class="mini-header">
+<span class="mini-icon">🔥</span>
+<h4>4 MINGGU TERAKHIR</h4>
+</div>
+<div class="mini-chart-wrap">
+<canvas id="penyakitChart4"></canvas>
 </div>
 </div>
+</div>
+</div>
+</div>
+
+<!-- ===== DATA TABLE SECTION ===== -->
+<div class="data-table-section">
+<div class="table-header">
+<h3>📋 Data Mingguan Terakhir</h3>
+<button class="btn-export" onclick="alert('Export fitur akan segera hadir!')">📥 Export CSV</button>
+</div>
+<div class="table-container" id="dataTable">
+<table>
+<thead>
+<tr>
+<th>Minggu</th>
+<th>Tahun 1</th>
+<th>Tahun 2</th>
+<th>Selisih</th>
+<th>Tren</th>
+</tr>
+</thead>
+<tbody id="tableBody">
+<tr><td colspan="5" style="text-align:center;">Pilih penyakit untuk melihat data</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 
