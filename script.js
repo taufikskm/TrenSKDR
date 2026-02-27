@@ -184,7 +184,6 @@ document.querySelector('.card-green .card-value').textContent = "2024 - 2026";
 
 
 
-
 /* ================= MAIN CHART ================= */
 
 function updateChart(){
@@ -342,6 +341,74 @@ updateSecondaryCharts(data1, data2, minggu, tahun1, tahun2, penyakit);
 // Update data table
 updateDataTable(data1, data2, minggu, tahun1, tahun2);
 
+// Update Status Alert based on selected years and disease
+updateAlertStatus(tahun1, tahun2, penyakit);
+
+}
+
+
+/* ================= STATUS ALERT ================= */
+
+function updateAlertStatus(tahun1, tahun2, penyakit){
+// Calculate Status Alert based on selected years and disease
+// Compare last 4 weeks vs previous 4 weeks for selected disease and years
+
+let totalLast4Weeks = 0;
+let totalPrev4Weeks = 0;
+let count = 0;
+
+// Get data for selected disease and years
+const selectedData = dataset.filter(row => 
+row.PENYAKIT === penyakit && 
+(row.TAHUN === tahun1 || row.TAHUN === tahun2)
+);
+
+selectedData.forEach(row => {
+const mingguKeys = Object.keys(row).filter(k => k.startsWith("M-")).sort();
+const last4 = mingguKeys.slice(-4);
+const prev4 = mingguKeys.slice(-8, -4);
+
+let rowLast4 = 0;
+let rowPrev4 = 0;
+
+last4.forEach(m => {
+rowLast4 += parseFloat(row[m]) || 0;
+});
+prev4.forEach(m => {
+rowPrev4 += parseFloat(row[m]) || 0;
+});
+
+totalLast4Weeks += rowLast4;
+totalPrev4Weeks += rowPrev4;
+count++;
+});
+
+let alertStatus = "Aman";
+let alertLevel = "Level: Low";
+let alertClass = "card-green";
+
+if(totalPrev4Weeks > 0){
+const increase = ((totalLast4Weeks - totalPrev4Weeks) / totalPrev4Weeks) * 100;
+if(increase > 50){
+alertStatus = "Bahaya";
+alertLevel = "Level: High";
+alertClass = "card-red";
+} else if(increase > 20){
+alertStatus = "Waspada";
+alertLevel = "Level: Moderate";
+alertClass = "card-orange";
+} else if(increase < -20){
+alertStatus = "Membaik";
+alertLevel = "Level: Good";
+alertClass = "card-blue";
+}
+}
+
+// Update alert card
+const alertCard = document.getElementById('alertCard');
+alertCard.className = "card " + alertClass;
+document.getElementById('alertStatus').textContent = alertStatus;
+document.getElementById('alertLevel').textContent = alertLevel + " | " + penyakit;
 }
 
 
