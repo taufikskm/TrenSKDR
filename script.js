@@ -678,15 +678,40 @@ function updateDataTable(data1, data2, minggu, tahun1, tahun2){
 const tbody = document.getElementById("tableBody");
 tbody.innerHTML = "";
 
-// Get last 8 weeks for display
-const displayWeeks = minggu.slice(-8);
-const startIndex = minggu.length - 8;
+// Find the last valid (non-null) week index for each year
+let lastValidIndex1 = data1.length - 1;
+while(lastValidIndex1 >= 0 && (data1[lastValidIndex1] === null || data1[lastValidIndex1] === undefined)){
+lastValidIndex1--;
+}
 
-displayWeeks.forEach((week, idx) => {
-const actualIndex = startIndex + idx;
-const val1 = data1[actualIndex] || 0;
-const val2 = data2[actualIndex] || 0;
-const selisih = val2 - val1;
+let lastValidIndex2 = data2.length - 1;
+while(lastValidIndex2 >= 0 && (data2[lastValidIndex2] === null || data2[lastValidIndex2] === undefined)){
+lastValidIndex2--;
+}
+
+// Use the maximum of both to determine display range
+const lastValidIndex = Math.max(lastValidIndex1, lastValidIndex2);
+
+// Get last 8 valid weeks for display (starting from last valid week)
+const startIndex = Math.max(0, lastValidIndex - 7);
+const displayWeeks = minggu.slice(startIndex, lastValidIndex + 1);
+
+// Reverse to show newest first
+const reversedWeeks = [...displayWeeks].reverse();
+
+reversedWeeks.forEach((week) => {
+const actualIndex = minggu.indexOf(week);
+const val1 = data1[actualIndex];
+const val2 = data2[actualIndex];
+
+// Skip if both values are null/undefined
+if((val1 === null || val1 === undefined) && (val2 === null || val2 === undefined)){
+return;
+}
+
+const numVal1 = val1 !== null && val1 !== undefined ? val1 : 0;
+const numVal2 = val2 !== null && val2 !== undefined ? val2 : 0;
+const selisih = numVal2 - numVal1;
 
 let trend = "";
 let trendClass = "";
@@ -704,8 +729,8 @@ trendClass = "trend-same";
 const row = `
 <tr>
 <td><strong>${week}</strong></td>
-<td>${val1.toLocaleString()}</td>
-<td>${val2.toLocaleString()}</td>
+<td>${val1 !== null && val1 !== undefined ? val1.toLocaleString() : '-'}</td>
+<td>${val2 !== null && val2 !== undefined ? val2.toLocaleString() : '-'}</td>
 <td>${selisih !== 0 ? selisih.toLocaleString() : '-'}</td>
 <td class="${trendClass}">${trend}</td>
 </tr>
