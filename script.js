@@ -168,50 +168,8 @@ topDisease = d;
 document.getElementById("topDisease").textContent = topDisease;
 document.getElementById("topDiseaseValue").textContent = "Total: " + topValue.toLocaleString() + " kasus";
 
-// Calculate Status Alert based on recent trend
-// Compare last 4 weeks vs previous 4 weeks across all diseases
-let totalLast4Weeks = 0;
-let totalPrev4Weeks = 0;
+// Status Alert will be updated in updateChart() based on selected years
 
-dataset.forEach(row => {
-const mingguKeys = Object.keys(row).filter(k => k.startsWith("M-")).sort();
-const last4 = mingguKeys.slice(-4);
-const prev4 = mingguKeys.slice(-8, -4);
-
-last4.forEach(m => {
-totalLast4Weeks += parseFloat(row[m]) || 0;
-});
-prev4.forEach(m => {
-totalPrev4Weeks += parseFloat(row[m]) || 0;
-});
-});
-
-let alertStatus = "Aman";
-let alertLevel = "Level: Low";
-let alertClass = "card-green";
-
-if(totalPrev4Weeks > 0){
-const increase = ((totalLast4Weeks - totalPrev4Weeks) / totalPrev4Weeks) * 100;
-if(increase > 50){
-alertStatus = "Bahaya";
-alertLevel = "Level: High";
-alertClass = "card-red";
-} else if(increase > 20){
-alertStatus = "Waspada";
-alertLevel = "Level: Moderate";
-alertClass = "card-orange";
-} else if(increase < -20){
-alertStatus = "Membaik";
-alertLevel = "Level: Good";
-alertClass = "card-blue";
-}
-}
-
-// Update alert card
-const alertCard = document.getElementById('alertCard');
-alertCard.className = "card " + alertClass;
-document.getElementById('alertStatus').textContent = alertStatus;
-document.getElementById('alertLevel').textContent = alertLevel;
 
 
 // Set current date
