@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard SKDR Nasional</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+</head>
+
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar" class="sidebar">
+
+<h2>SKDR</h2>
+
+<a href="#">🏠 Dashboard</a>
+<a href="#">📈 Tren Penyakit</a>
+<a href="#">📊 Perbandingan</a>
+<a href="#">🗂 Rekap</a>
+<a href="#">⚙️ Setting</a>
+
+<a href="#">Created by Muhtof</a>
+
+</div>
+
+
+<!-- ================= MAIN ================= -->
+<div id="main" class="main">
+
+<header>
+<button id="toggleBtn" class="hamburger">☰</button>
+<h1>Dashboard Penyakit Mingguan Nasional</h1>
+</header>
+
+<div class="filter">
+
+<select id="penyakitSelect"></select>
+
+<select id="tahun1"></select>
+
+<select id="tahun2"></select>
+
+<button onclick="updateChart()">Bandingkan</button>
+
+</div>
+
+<div class="chart-container">
+<canvas id="chart"></canvas>
+</div>
+
+<!-- ================= PENYAKIT 4 DAN 12 MINGGU SECTION ================= -->
+<div class="penyakit-section">
+<h2 class="penyakit-title" id="secondaryTitle">TREN PENYAKIT BERDASARKAN SKDR</h2>
+
+
+
+<div class="penyakit-container">
+<!-- ===== LEFT: MAIN PENYAKIT CHART ===== -->
+<div class="penyakit-main-chart">
+<div class="penyakit-legend" id="penyakitLegend">
+<span class="y2025" id="legend2025">---- 2025</span>
+<span class="y2026" id="legend2026">---- 2026</span>
+</div>
+
+<canvas id="penyakitMainChart"></canvas>
+</div>
+
+<!-- ===== RIGHT: MINI CHARTS ===== -->
+<div class="penyakit-side">
+<div class="penyakit-mini-card">
+
+<h3>12 MINGGU AKHIR</h3>
+<canvas id="penyakitChart12"></canvas>
+</div>
+<div class="penyakit-mini-card">
+<h3>4 MINGGU AKHIR</h3>
+<canvas id="penyakitChart4"></canvas>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
