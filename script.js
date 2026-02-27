@@ -466,50 +466,83 @@ const newerData = year2 >= year1 ? data2 : data1;
 const olderData = year2 >= year1 ? data1 : data2;
 
 // Find the last valid week starting from the most recent year first
-let lastValidIndex = -1;
+let lastValidIndexNewer = -1;
+let lastValidIndexOlder = -1;
 
 // Check newer year first
 for(let i = newerData.length - 1; i >= 0; i--){
 if(newerData[i] !== null && newerData[i] !== undefined){
-lastValidIndex = i;
+lastValidIndexNewer = i;
 break;
 }
 }
 
-// If no valid data in newer year, check older year
-if(lastValidIndex === -1){
+// Check older year
 for(let i = olderData.length - 1; i >= 0; i--){
 if(olderData[i] !== null && olderData[i] !== undefined){
-lastValidIndex = i;
+lastValidIndexOlder = i;
 break;
 }
 }
-}
 
-// If still no valid data, use the last week
-if(lastValidIndex === -1){
-lastValidIndex = minggu.length - 1;
-}
-
-// Get last 12 and 4 weeks data from the last valid index
-const last12Start = Math.max(0, lastValidIndex - 11);
-const last4Start = Math.max(0, lastValidIndex - 3);
+// Build combined 12 weeks data from both years if needed
 const last12 = [];
-const last4 = [];
 const last12Labels = [];
+let weeksNeeded = 12;
+let currentIndex = lastValidIndexNewer;
+
+// First, take weeks from newer year (working backwards)
+while(weeksNeeded > 0 && currentIndex >= 0){
+if(newerData[currentIndex] !== null && newerData[currentIndex] !== undefined){
+last12.unshift(newerData[currentIndex]);
+last12Labels.unshift(minggu[currentIndex]);
+weeksNeeded--;
+}
+currentIndex--;
+}
+
+// If still need more weeks, take from older year
+if(weeksNeeded > 0){
+currentIndex = lastValidIndexOlder;
+while(weeksNeeded > 0 && currentIndex >= 0){
+if(olderData[currentIndex] !== null && olderData[currentIndex] !== undefined){
+last12.unshift(olderData[currentIndex]);
+last12Labels.unshift(minggu[currentIndex]);
+weeksNeeded--;
+}
+currentIndex--;
+}
+}
+
+// Build combined 4 weeks data from both years if needed
+const last4 = [];
 const last4Labels = [];
+weeksNeeded = 4;
+currentIndex = lastValidIndexNewer;
 
-// Build last 12 weeks data with proper labels
-for(let i = last12Start; i <= lastValidIndex; i++){
-last12.push(newerData[i] !== null && newerData[i] !== undefined ? newerData[i] : null);
-last12Labels.push(minggu[i]);
+// First, take weeks from newer year (working backwards)
+while(weeksNeeded > 0 && currentIndex >= 0){
+if(newerData[currentIndex] !== null && newerData[currentIndex] !== undefined){
+last4.unshift(newerData[currentIndex]);
+last4Labels.unshift(minggu[currentIndex]);
+weeksNeeded--;
+}
+currentIndex--;
 }
 
-// Build last 4 weeks data with proper labels
-for(let i = last4Start; i <= lastValidIndex; i++){
-last4.push(newerData[i] !== null && newerData[i] !== undefined ? newerData[i] : null);
-last4Labels.push(minggu[i]);
+// If still need more weeks, take from older year
+if(weeksNeeded > 0){
+currentIndex = lastValidIndexOlder;
+while(weeksNeeded > 0 && currentIndex >= 0){
+if(olderData[currentIndex] !== null && olderData[currentIndex] !== undefined){
+last4.unshift(olderData[currentIndex]);
+last4Labels.unshift(minggu[currentIndex]);
+weeksNeeded--;
 }
+currentIndex--;
+}
+}
+
 
 // Build secondary chart datasets - only show one if years are same
 const secondaryDatasets = [];
