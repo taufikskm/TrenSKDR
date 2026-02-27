@@ -457,11 +457,59 @@ legend2026.style.display = "inline";
 }
 }
 
+// Determine which year is more recent
+const year1 = parseInt(tahun1);
+const year2 = parseInt(tahun2);
+const newerYear = year2 >= year1 ? tahun2 : tahun1;
+const olderYear = year2 >= year1 ? tahun1 : tahun2;
+const newerData = year2 >= year1 ? data2 : data1;
+const olderData = year2 >= year1 ? data1 : data2;
 
+// Find the last valid week starting from the most recent year first
+let lastValidIndex = -1;
 
-// Get last 12 and 4 weeks data from first dataset (tahun1)
-const last12 = data1.slice(-12);
-const last4 = data1.slice(-4);
+// Check newer year first
+for(let i = newerData.length - 1; i >= 0; i--){
+if(newerData[i] !== null && newerData[i] !== undefined){
+lastValidIndex = i;
+break;
+}
+}
+
+// If no valid data in newer year, check older year
+if(lastValidIndex === -1){
+for(let i = olderData.length - 1; i >= 0; i--){
+if(olderData[i] !== null && olderData[i] !== undefined){
+lastValidIndex = i;
+break;
+}
+}
+}
+
+// If still no valid data, use the last week
+if(lastValidIndex === -1){
+lastValidIndex = minggu.length - 1;
+}
+
+// Get last 12 and 4 weeks data from the last valid index
+const last12Start = Math.max(0, lastValidIndex - 11);
+const last4Start = Math.max(0, lastValidIndex - 3);
+const last12 = [];
+const last4 = [];
+const last12Labels = [];
+const last4Labels = [];
+
+// Build last 12 weeks data with proper labels
+for(let i = last12Start; i <= lastValidIndex; i++){
+last12.push(newerData[i] !== null && newerData[i] !== undefined ? newerData[i] : null);
+last12Labels.push(minggu[i]);
+}
+
+// Build last 4 weeks data with proper labels
+for(let i = last4Start; i <= lastValidIndex; i++){
+last4.push(newerData[i] !== null && newerData[i] !== undefined ? newerData[i] : null);
+last4Labels.push(minggu[i]);
+}
 
 // Build secondary chart datasets - only show one if years are same
 const secondaryDatasets = [];
@@ -545,13 +593,13 @@ hitRadius:5
 
 });
 
-// Create 12 weeks mini chart
+// Create 12 weeks mini chart - using data from last valid index
 if(penyakitChart12) penyakitChart12.destroy();
 
 penyakitChart12 = new Chart(document.getElementById("penyakitChart12"), {
 type: "line",
 data: {
-labels: last12.map((_,i) => "M-" + (data1.length - 12 + i + 1)),
+labels: last12Labels,
 datasets: [{
 data: last12,
 borderColor: "#58b7c0",
@@ -562,7 +610,8 @@ pointRadius: 4,
 pointBackgroundColor: "#58b7c0",
 pointHoverRadius: 7,
 pointHitRadius: 8,
-fill:true
+fill:true,
+spanGaps: true
 }]
 },
 options: {
@@ -607,13 +656,13 @@ hitRadius:8
 }
 });
 
-// Create 4 weeks mini chart
+// Create 4 weeks mini chart - using data from last valid index
 if(penyakitChart4) penyakitChart4.destroy();
 
 penyakitChart4 = new Chart(document.getElementById("penyakitChart4"), {
 type: "line",
 data: {
-labels: last4.map((_,i) => "M-" + (data1.length - 4 + i + 1)),
+labels: last4Labels,
 datasets: [{
 data: last4,
 borderColor: "#59c17a",
@@ -624,7 +673,8 @@ pointRadius: 5,
 pointBackgroundColor: "#59c17a",
 pointHoverRadius: 8,
 pointHitRadius: 10,
-fill:true
+fill:true,
+spanGaps: true
 }]
 },
 options: {
