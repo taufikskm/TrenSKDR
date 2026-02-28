@@ -1,5 +1,6 @@
-/*  */let dataset=[];
+let dataset=[];
 let chart;
+let continuousChart;
 let penyakitMainChart;
 let penyakitChart12;
 let penyakitChart4;
@@ -335,6 +336,9 @@ hitRadius:5
 
 });
 
+// Update continuous chart
+updateContinuousChart(penyakit, tahun1, tahun2, minggu);
+
 // Update secondary charts with same data
 updateSecondaryCharts(data1, data2, minggu, tahun1, tahun2, penyakit);
 
@@ -344,6 +348,150 @@ updateDataTable(data1, data2, minggu, tahun1, tahun2);
 // Update Status Alert based on selected years and disease
 updateAlertStatus(tahun1, tahun2, penyakit);
 
+}
+
+
+/* ================= CONTINUOUS CHART ================= */
+
+function updateContinuousChart(penyakit, tahun1, tahun2, minggu){
+// Build continuous data from tahun1 to tahun2
+const year1 = parseInt(tahun1);
+const year2 = parseInt(tahun2);
+
+let continuousData = [];
+let continuousLabels = [];
+
+// If same year, just use that year's data
+if(tahun1 === tahun2){
+const row = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun1);
+if(row){
+minggu.forEach(m=>{
+const val = row[m];
+if(val !== undefined && val !== ""){
+continuousData.push(Number(val));
+continuousLabels.push(`${m} ${tahun1}`);
+}
+});
+}
+} else {
+// If different years, combine data from both years
+// First get data from tahun1 (all weeks)
+const row1 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun1);
+if(row1){
+minggu.forEach(m=>{
+const val = row1[m];
+if(val !== undefined && val !== ""){
+continuousData.push(Number(val));
+continuousLabels.push(`${m} ${tahun1}`);
+}
+});
+}
+
+// Then get data from tahun2 (up to last available week)
+const row2 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun2);
+if(row2){
+// Find last valid week in tahun2
+let lastValidIndex = -1;
+for(let i = minggu.length - 1; i >= 0; i--){
+const val = row2[minggu[i]];
+if(val !== undefined && val !== ""){
+lastValidIndex = i;
+break;
+}
+}
+
+// Add data from tahun2
+for(let i = 0; i <= lastValidIndex; i++){
+const val = row2[minggu[i]];
+if(val !== undefined && val !== ""){
+continuousData.push(Number(val));
+continuousLabels.push(`${minggu[i]} ${tahun2}`);
+}
+}
+}
+}
+
+if(continuousChart) continuousChart.destroy();
+
+continuousChart = new Chart(document.getElementById("continuousChart"), {
+type: "line",
+data: {
+labels: continuousLabels,
+datasets: [{
+label: `${penyakit} (${tahun1} → ${tahun2})`,
+data: continuousData,
+borderColor: '#38a169',
+backgroundColor: 'rgba(56, 161, 105, 0.1)',
+borderWidth: 3,
+tension: 0.3,
+pointRadius: 3,
+pointHoverRadius: 6,
+fill: true
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+interaction: {mode: 'nearest', intersect: true, axis: 'xy'},
+plugins: {
+legend: {
+position: 'top',
+labels: {
+usePointStyle: true,
+padding: 20,
+font: {size: 13}
+}
+},
+tooltip: {
+enabled: true,
+mode: 'nearest',
+intersect: true,
+animation: false,
+backgroundColor: 'rgba(45,55,72,0.9)',
+titleFont: {size: 14},
+bodyFont: {size: 13},
+padding: 12,
+cornerRadius: 8,
+callbacks: {
+title: function(context){
+return context[0].label;
+},
+label: function(context){
+return context.parsed.y.toLocaleString() + ' kasus';
+}
+}
+}
+},
+scales: {
+x: {
+grid: {display: false},
+ticks: {
+autoSkip: true,
+maxRotation: 90,
+minRotation: 90,
+font: {size: 10},
+maxTicksLimit: 52
+}
+},
+y: {
+beginAtZero: true,
+grid: {color: '#e2e8f0'},
+ticks: {
+font: {size: 11},
+callback: function(value){
+return value.toLocaleString();
+}
+}
+}
+},
+elements: {
+point: {
+radius: 3,
+hoverRadius: 6
+}
+}
+}
+});
 }
 
 
