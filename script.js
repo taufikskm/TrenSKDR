@@ -366,43 +366,59 @@ updateAlertStatus(tahun1, tahun2, penyakit);
 /* ================= CONTINUOUS CHART ================= */
 
 function updateContinuousChart(penyakit, tahun1, tahun2, minggu){
-// Build continuous data from tahun1 to tahun2
-const year1 = parseInt(tahun1);
-const year2 = parseInt(tahun2);
+// Build continuous data from older year to newer year
+let year1 = parseInt(tahun1);
+let year2 = parseInt(tahun2);
+
+// Swap years if tahun1 > tahun2
+let startYear = tahun1;
+let endYear = tahun2;
+if(year1 > year2){
+startYear = tahun2;
+endYear = tahun1;
+}
+
+// Update chart title
+const continuousChartTitle = document.getElementById("continuousChartTitle");
+if(startYear === endYear){
+continuousChartTitle.textContent = `📊 Tren ${penyakit} Tahun ${startYear}`;
+} else {
+continuousChartTitle.textContent = `📊 Tren ${penyakit} (${startYear} - ${endYear})`;
+}
 
 let continuousData = [];
 let continuousLabels = [];
 
 // If same year, just use that year's data
-if(tahun1 === tahun2){
-const row = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun1);
+if(startYear === endYear){
+const row = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===startYear);
 if(row){
 minggu.forEach(m=>{
 const val = row[m];
 if(val !== undefined && val !== ""){
 continuousData.push(Number(val));
-continuousLabels.push(`${m} ${tahun1}`);
+continuousLabels.push(`${m} ${startYear}`);
 }
 });
 }
 } else {
 // If different years, combine data from both years
-// First get data from tahun1 (all weeks)
-const row1 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun1);
+// First get data from older year (startYear)
+const row1 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===startYear);
 if(row1){
 minggu.forEach(m=>{
 const val = row1[m];
 if(val !== undefined && val !== ""){
 continuousData.push(Number(val));
-continuousLabels.push(`${m} ${tahun1}`);
+continuousLabels.push(`${m} ${startYear}`);
 }
 });
 }
 
-// Then get data from tahun2 (up to last available week)
-const row2 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===tahun2);
+// Then get data from newer year (endYear)
+const row2 = dataset.find(d=> d.PENYAKIT===penyakit && d.TAHUN===endYear);
 if(row2){
-// Find last valid week in tahun2
+// Find last valid week in endYear
 let lastValidIndex = -1;
 for(let i = minggu.length - 1; i >= 0; i--){
 const val = row2[minggu[i]];
@@ -412,12 +428,12 @@ break;
 }
 }
 
-// Add data from tahun2
+// Add data from endYear
 for(let i = 0; i <= lastValidIndex; i++){
 const val = row2[minggu[i]];
 if(val !== undefined && val !== ""){
 continuousData.push(Number(val));
-continuousLabels.push(`${minggu[i]} ${tahun2}`);
+continuousLabels.push(`${minggu[i]} ${endYear}`);
 }
 }
 }
