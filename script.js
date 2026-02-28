@@ -342,7 +342,7 @@ let yearText = tahun1;
 if(tahun1 !== tahun2){
 yearText = tahun1 + " & " + tahun2;
 }
-mainChartTitle.textContent = `📈 Grafik ${penyakit} Tahun ${yearText}`;
+mainChartTitle.textContent = `📈 Tren ${penyakit} Tahun ${yearText}`;
 
 // Update continuous chart
 updateContinuousChart(penyakit, tahun1, tahun2, minggu);
