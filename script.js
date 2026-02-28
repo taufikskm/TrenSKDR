@@ -1,4 +1,4 @@
-let dataset=[];
+/*  */let dataset=[];
 let chart;
 let penyakitMainChart;
 let penyakitChart12;
