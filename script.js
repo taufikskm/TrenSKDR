@@ -129,7 +129,6 @@ t2.innerHTML+=`<option>${x}</option>`;
 // Set default to 2026
 t1.value = "2026";
 t2.value = "2026";
-});
 
 }
 
