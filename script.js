@@ -446,7 +446,7 @@ type: "line",
 data: {
 labels: continuousLabels,
 datasets: [{
-label: `${penyakit} (${tahun1} → ${tahun2})`,
+label: `${penyakit} (${startYear} - ${endYear})`,
 data: continuousData,
 borderColor: '#38a169',
 backgroundColor: 'rgba(56, 161, 105, 0.1)',
