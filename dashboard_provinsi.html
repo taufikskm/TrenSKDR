@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard SKDR Provinsi | PHEOC Style</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    /* ======================
+       MAP STYLES
+    ======================= */
+    .map-section { margin: 0 30px 30px; }
+    .map-card { 
+        background: white; 
+        border-radius: 16px; 
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06); 
+        border: 1px solid #e6e6e6;
+        overflow: hidden; 
+    }
+    .map-header { 
+        background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+        color: white; 
+        padding: 12px 20px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        flex-wrap: wrap; 
+        gap: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        min-height: auto;
+        height: auto;
+    }
+    .map-header h3 { font-size: 16px; font-weight: 600; margin: 0; }
+    .map-legend { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+    .legend-color { width: 18px; height: 18px; border-radius: 4px; display: inline-block; border: 1px solid #ccc; }
+    .legend-high { background: #b71c1c; }
+    .legend-medium { background: #fdd835; }
+    .legend-low { background: #2e7d32; }
+    .legend-none { background: #cbd5e0; }
+    .map-content { padding: 15px; background: #f9fbfa; overflow: hidden; }
+    #indonesiaMap { height: 450px; width: 100%; border-radius: 16px; }
+    .leaflet-pane, .leaflet-map-pane { pointer-events: auto; }
+    .leaflet-container { overflow: hidden !important; height: 450px !important; border-radius: 16px; }
+    .leaflet-control-container .leaflet-top, .leaflet-control-container .leaflet-bottom { z-index: 1000; }
+    .leaflet-popup-content-wrapper { border-radius: 8px; }
+    .leaflet-popup-content { margin: 12px; font-size: 14px; }
+    .popup-province { font-weight: bold; color: #1a365d; font-size: 16px; }
+    .popup-cases { color: #2d3748; margin-top: 5px; }
+    .popup-rank { color: #718096; font-size: 12px; }
+</style>
+
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar" class="sidebar">
+
+<div class="sidebar-header">
+<h2>SKDR</h2>
+<p>Sistem Kewaspadaan Dini dan Respon</p>
+</div>
+
+<nav class="sidebar-nav">
+<a href="index.html">🏠 Dashboard Penyakit</a>
+<a href="data_penyakit.html">📋 Data Penyakit</a>
+<a href="dashboard_provinsi.html" class="active">🗺️ Dashboard Provinsi</a>
+<a href="data_provinsi.html">📊 Data Provinsi</a>
+</nav>
+
+<div class="sidebar-footer">
+<p>Made by</p>
+<h4><a href="https://www.instagram.com/muhtof" target="_blank" style="color:white;text-decoration:none;">Taufik</a></h4>
+</div>
+
+</div>
+
+
+<!-- ================= MAIN ================= -->
+<div id="main" class="main">
+
+<!-- ===== TOP HEADER ===== -->
+<header class="main-header">
+<button id="toggleBtn" class="hamburger">☰</button>
+<div class="header-title">
+<h1>Dashboard Distribusi Kasus per Provinsi</h1>
+<p>Monitoring Distribusi Penyakit per Provinsi di Indonesia</p>
+</div>
+<div class="header-date" id="currentDate"></div>
+</header>
+
+<!-- ===== SUMMARY CARDS ===== -->
+<div class="summary-cards">
+<div class="card card-blue">
+<div class="card-icon">📊</div>
+<div class="card-content">
+<h3>Total Provinsi</h3>
+<p class="card-value" id="totalProvinsi">-</p>
+<p class="card-label">Provinsi terdata</p>
+</div>
+</div>
+
+<div class="card card-green">
+<div class="card-icon">📅</div>
+<div class="card-content">
+<h3>Tahun</h3>
+<p class="card-value" id="selectedYear">-</p>
+<p class="card-label">Tahun dipilih</p>
+</div>
+</div>
+
+<div class="card card-orange">
+<div class="card-icon">🔥</div>
+<div class="card-content">
+<h3>Provinsi Tertinggi</h3>
+<p class="card-value" id="topProvinsi">-</p>
+<p class="card-label" id="topProvinsiValue">-</p>
+</div>
+</div>
+
+<div class="card card-red">
+<div class="card-icon">⚠️</div>
+<div class="card-content">
+<h3>Provinsi Terendah</h3>
+<p class="card-value" id="lowProvinsi">-</p>
+<p class="card-label" id="lowProvinsiValue">-</p>
+</div>
+</div>
+</div>
+
+<!-- ===== FILTER SECTION ===== -->
+<div class="filter-section">
+<div class="filter-header">
+<h3>🔍 Filter Data</h3>
+</div>
+<div class="filter-content">
+<div class="filter-group">
+<label>Penyakit</label>
+<select id="penyakitSelect" onchange="loadMingguOptions(); updateAll()"></select>
+</div>
+<div class="filter-group">
+<label>Tahun</label>
+<select id="tahunSelect" onchange="loadMingguOptions(); updateAll()"></select>
+</div>
+<div class="filter-group">
+<label>Minggu</label>
+<select id="mingguSelect" onchange="updateAll()"></select>
+</div>
+</div>
+</div>
+
+<!-- ===== MAP SECTION ===== -->
+<div class="map-section">
+<div class="map-card">
+<div class="map-header">
+<h3 id="mapTitle">🗺️ Peta Distribusi Kasus Penyakit</h3>
+<div class="map-legend">
+<div class="legend-item"><span class="legend-color legend-high"></span><span>Tinggi (>Q3)</span></div>
+<div class="legend-item"><span class="legend-color legend-medium"></span><span>Sedang (Q1-Q3)</span></div>
+<div class="legend-item"><span class="legend-color legend-low"></span><span>Rendah (<Q1)</span></div>
+</div>
+</div>
+<div class="map-content">
+<div id="indonesiaMap"></div>
+</div>
+</div>
+</div>
+
+<!-- ===== MAIN CHART AND DATA SECTION ===== -->
+<div class="chart-data-container">
+    <!-- ===== MAIN CHART ===== -->
+    <div class="chart-section">
+        <div class="chart-header">
+            <h3 id="mainChartTitle">📊 Distribusi Kasus per Provinsi</h3>
+            <button onclick="copyChartToClipboard()" style="padding:5px 10px; cursor:pointer; background:#38a169; color:white; border:none; border-radius:4px; font-size:12px;">📋 Copy Image</button>
+        </div>
+        <div class="chart-container" id="chartContainer">
+            <canvas id="chart"></canvas>
+        </div>
+    </div>
+
+    <!-- ===== DATA TABLE SECTION ===== -->
+    <div class="data-table-section">
+        <div class="table-header">
+            <h3>📋 Data Kasus per Provinsi</h3>
+            <button class="btn-export" onclick="exportToCSV()">📥 Export CSV</button>
+        </div>
+        <div class="table-container" id="dataTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Provinsi</th>
+                        <th>Total</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="4" style="text-align:center;">Pilih penyakit untuk melihat data</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script src="dashboard_provinsi.js?v=20250101"></script>
+
+</body>
+</html>
+

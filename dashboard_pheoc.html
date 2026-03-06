@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard PHEOC Monitoring Level | PHEOC Style</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    /* ======================
+       PHEOC LEVEL STYLES
+    ======================= */
+    .pheoc-level {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .level-green {
+        background: #c6f6d5;
+        color: #22543d;
+        border: 1px solid #48bb78;
+    }
+    .level-yellow {
+        background: #fefcbf;
+        color: #744210;
+        border: 1px solid #ecc94b;
+    }
+    .level-orange {
+        background: #feebc8;
+        color: #7c2d12;
+        border: 1px solid #ed8936;
+    }
+    .level-red {
+        background: #fed7d7;
+        color: #742a2a;
+        border: 1px solid #f56565;
+    }
+    
+    /* Map styles */
+    .map-section { margin: 0 30px 30px; }
+    .map-card { 
+        background: white; 
+        border-radius: 16px; 
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06); 
+        border: 1px solid #e6e6e6;
+        overflow: hidden; 
+    }
+    .map-header { 
+        background: linear-gradient(135deg, #744210, #975a16); 
+        color: white; 
+        padding: 14px 20px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        flex-wrap: wrap; 
+        gap: 10px;
+    }
+    .map-header h3 { font-size: 16px; font-weight: 600; margin: 0; }
+    .map-legend { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 2px solid white; }
+    .legend-dot-green { background: #48bb78; }
+    .legend-dot-yellow { background: #ecc94b; }
+    .legend-dot-orange { background: #ed8936; }
+    .legend-dot-red { background: #f56565; }
+    .map-content { padding: 15px; background: #f9fbfa; }
+    #indonesiaMap { height: 450px; width: 100%; border-radius: 16px; }
+    .leaflet-container { overflow: hidden !important; height: 450px !important; border-radius: 16px; }
+    
+    /* ======================
+       PHEOC CARDS
+    ======================= */
+    .pheoc-summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin: 0 30px 30px;
+    }
+    .pheoc-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 5px solid;
+    }
+    .pheoc-card.green { border-left-color: #48bb78; }
+    .pheoc-card.yellow { border-left-color: #ecc94b; }
+    .pheoc-card.orange { border-left-color: #ed8936; }
+    .pheoc-card.red { border-left-color: #f56565; }
+    .pheoc-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .pheoc-card.green .pheoc-icon { background: #c6f6d5; }
+    .pheoc-card.yellow .pheoc-icon { background: #fefcbf; }
+    .pheoc-card.orange .pheoc-icon { background: #feebc8; }
+    .pheoc-card.red .pheoc-icon { background: #fed7d7; }
+    .pheoc-info h4 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+        color: #2d3748;
+    }
+    .pheoc-info p {
+        font-size: 12px;
+        color: #718096;
+        margin: 5px 0 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Province Level Cards */
+    .province-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+        margin: 0 30px 30px;
+    }
+    .province-card {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: transform 0.2s;
+    }
+    .province-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .province-rank {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        background: #edf2f7;
+        color: #4a5568;
+    }
+    .province-rank.top-3 {
+        background: #744210;
+        color: white;
+    }
+    .province-info {
+        flex: 1;
+    }
+    .province-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2d3748;
+    }
+    .province-info p {
+        font-size: 12px;
+        color: #718096;
+        margin: 3px 0 0;
+    }
+</style>
+
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar" class="sidebar">
+
+<div class="sidebar-header">
+<h2>SKDR</h2>
+<p>Sistem Kewaspadaan Dini dan Respon</p>
+</div>
+
+<nav class="sidebar-nav">
+<a href="index.html">🏠 Dashboard Penyakit</a>
+<a href="data_penyakit.html">📋 Data Penyakit</a>
+<a href="dashboard_provinsi.html">🗺️ Dashboard Provinsi</a>
+<a href="dashboard_pheoc.html" class="active">🚨 PHEOC Level</a>
+<a href="data_provinsi.html">📊 Data Provinsi</a>
+</nav>
+
+<div class="sidebar-footer">
+<p>Made by</p>
+<h4><a href="https://www.instagram.com/muhtof" target="_blank" style="color:white;text-decoration:none;">Taufik</a></h4>
+</div>
+
+</div>
+
+
+<!-- ================= MAIN ================= -->
+<div id="main" class="main">
+
+<!-- ===== TOP HEADER ===== -->
+<header class="main-header">
+<button id="toggleBtn" class="hamburger">☰</button>
+<div class="header-title">
+<h1>Dashboard PHEOC Monitoring Level</h1>
+<p>Monitoring Tingkat Kewaspadaan per Provinsi di Indonesia</p>
+</div>
+<div class="header-date" id="currentDate"></div>
+</header>
+
+<!-- ===== PHEOC SUMMARY CARDS ===== -->
+<div class="pheoc-summary">
+<div class="pheoc-card green">
+<div class="pheoc-icon">🟢</div>
+<div class="pheoc-info">
+<h4 id="countGreen">0</h4>
+<p>Normal (Green)</p>
+</div>
+</div>
+
+<div class="pheoc-card yellow">
+<div class="pheoc-icon">🟡</div>
+<div class="pheoc-info">
+<h4 id="countYellow">0</h4>
+<p>Waspada (Yellow)</p>
+</div>
+</div>
+
+<div class="pheoc-card orange">
+<div class="pheoc-icon">🟠</div>
+<div class="pheoc-info">
+<h4 id="countOrange">0</h4>
+<p>Siaga (Orange)</p>
+</div>
+</div>
+
+<div class="pheoc-card red">
+<div class="pheoc-icon">🔴</div>
+<div class="pheoc-info">
+<h4 id="countRed">0</h4>
+<p>Darurat (Red)</p>
+</div>
+</div>
+</div>
+
+<!-- ===== FILTER SECTION ===== -->
+<div class="filter-section">
+<div class="filter-header">
+<h3>🔍 Filter Data PHEOC</h3>
+</div>
+<div class="filter-content">
+<div class="filter-group">
+<label>Penyakit</label>
+<select id="penyakitSelect" onchange="updateAll()"></select>
+</div>
+<div class="filter-group">
+<label>Tahun</label>
+<select id="tahunSelect" onchange="updateAll()"></select>
+</div>
+</div>
+</div>
+
+<!-- ===== MAP SECTION ===== -->
+<div class="map-section">
+<div class="map-card">
+<div class="map-header">
+<h3>🗺️ Peta PHEOC Level Indonesia</h3>
+<div class="map-legend">
+<div class="legend-item"><span class="legend-dot legend-dot-green"></span><span>Normal</span></div>
+<div class="legend-item"><span class="legend-dot legend-dot-yellow"></span><span>Waspada</span></div>
+<div class="legend-item"><span class="legend-dot legend-dot-orange"></span><span>Siaga</span></div>
+<div class="legend-item"><span class="legend-dot legend-dot-red"></span><span>Darurat</span></div>
+</div>
+</div>
+<div class="map-content">
+<div id="indonesiaMap"></div>
+</div>
+</div>
+</div>
+
+<!-- ===== PROVINCE LEVEL CARDS ===== -->
+<div class="chart-section">
+<div class="chart-header">
+<h3>📋 Daftar Provinsi berdasarkan Level</h3>
+</div>
+<div class="province-grid" id="provinceGrid">
+<!-- Province cards will be rendered here -->
+</div>
+</div>
+
+<!-- ===== CHART SECTION ===== -->
+<div class="chart-section">
+<div class="chart-header">
+<h3>📊 Distribusi Level PHEOC</h3>
+</div>
+<div class="chart-container">
+<canvas id="pheocChart"></canvas>
+</div>
+</div>
+
+</div>
+
+<script src="dashboard_pheoc.js"></script>
+
+</body>
+</html>
+

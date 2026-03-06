@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Provinsi - CRUD Kasus Mingguan</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .crud-container { padding: 30px; }
+        .crud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 20px 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        .crud-header h2 { color: #1a365d; font-size: 24px; margin: 0; }
+        .btn-add { padding: 12px 25px; background: linear-gradient(90deg, #38a169 0%, #48bb78 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56,161,105,0.4); }
+        .btn-edit { padding: 8px 15px; background: #3182ce; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; margin-right: 5px; transition: 0.3s; }
+        .btn-edit:hover { background: #2c5282; }
+        .btn-delete { padding: 8px 15px; background: #e53e3e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: 0.3s; }
+        .btn-delete:hover { background: #c53030; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { background: linear-gradient(90deg, #2c5282 0%, #3182ce 100%); color: white; padding: 20px 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; font-size: 18px; }
+        .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; line-height: 1; }
+        .modal-body { padding: 25px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 14px; }
+        .form-group select, .form-group input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: 0.3s; box-sizing: border-box; }
+        .form-group select:focus, .form-group input:focus { outline: none; border-color: #3182ce; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .modal-footer { padding: 20px 25px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-save { padding: 12px 30px; background: #38a169; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-save:hover { background: #2f855a; }
+        .btn-cancel { padding: 12px 30px; background: #e2e8f0; color: #4a5568; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-cancel:hover { background: #cbd5e0; }
+        .loading { text-align: center; padding: 40px; color: #718096; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; z-index: 2000; animation: slideInRight 0.3s ease; display: none; }
+        .toast.success { background: #38a169; display: block; }
+        .toast.error { background: #e53e3e; display: block; }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 250px; }
+        .search-box input { width: 100%; padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+        .filter-box select { padding: 12px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; min-width: 150px; }
+    </style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar" class="sidebar">
+<div class="sidebar-header">
+<h2>🩺 SKDR</h2>
+<p>Sistem Kewaspadaan Dini dan Respon</p>
+</div>
+<nav class="sidebar-nav">
+<a href="index.html">🏠 Dashboard Penyakit</a>
+<a href="data_penyakit.html">📋 Data Penyakit</a>
+<a href="dashboard_provinsi.html">🗺️ Dashboard Provinsi</a>
+<a href="data_provinsi.html" class="active">📊 Data Provinsi</a>
+</nav>
+<div class="sidebar-footer">
+<p>Made by</p>
+<h4><a href="https://www.instagram.com/muhtof" target="_blank" style="color:white;text-decoration:none;">Taufik</a></h4>
+</div>
+</div>
+
+<!-- ================= MAIN ================= -->
+<div id="main" class="main">
+    <header class="main-header">
+        <button id="toggleBtn" class="hamburger">☰</button>
+        <div class="header-title">
+            <h1>Data Kasus Mingguan per Provinsi</h1>
+            <p>Kelola data kasus penyakit per provinsi mingguan</p>
+        </div>
+        <div class="header-date" id="currentDate"></div>
+    </header>
+
+    <div class="crud-container">
+        <div class="crud-header">
+            <h2>📋 Manajemen Data Kasus Mingguan Provinsi</h2>
+            <button class="btn-add" onclick="openModal()">
+                <span>+</span> Tambah Data
+            </button>
+        </div>
+        
+        <div class="filter-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Cari provinsi atau penyakit..." oninput="filterData()">
+            </div>
+            <div class="filter-box">
+                <select id="filterTahun" onchange="filterData()">
+                    <option value="">Semua Tahun</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div class="filter-box">
+                <select id="filterProvinsi" onchange="filterData()">
+                    <option value="">Semua Provinsi</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="data-table-section" style="margin: 0;">
+            <div class="table-container" id="dataTable">
+                <div class="loading">Loading data...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Tambah Data Kasus Provinsi</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="kasusForm">
+                <input type="hidden" id="id_provinsi">
+                
+                <div class="form-group">
+                    <label>Provinsi</label>
+                    <select id="provinsi" required>
+                        <option value="">-- Pilih Provinsi --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Penyakit</label>
+                    <select id="penyakit" required>
+                        <option value="">-- Pilih Penyakit --</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tahun</label>
+                        <input type="number" id="tahun" min="2020" max="2030" value="2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Minggu</label>
+                        <input type="number" id="minggu" min="1" max="52" value="1" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Jumlah Kasus</label>
+                    <input type="number" id="jumlah_kasus" min="0" placeholder="Masukkan jumlah kasus" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Batal</button>
+            <button class="btn-save" onclick="saveData()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const API_URL = './api/kasus_provinsi.php';
+    
+    let allData = [];
+    let isEditMode = false;
+    let editId = null;
+    
+    // ================= SIDEBAR =================
+    const toggleBtn = document.getElementById("toggleBtn");
+    const sidebar = document.getElementById("sidebar");
+    const main = document.getElementById("main");
+    
+    toggleBtn.onclick = () => {
+        sidebar.classList.toggle("hide");
+        main.classList.toggle("full");
+    };
+    
+    // ================= INIT =================
+    document.addEventListener('DOMContentLoaded', () => {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById("currentDate").textContent = now.toLocaleDateString('id-ID', options);
+        loadData();
+        loadDropdownOptions();
+    });
+    
+    // ================= LOAD DROPDOWN OPTIONS =================
+    async function loadDropdownOptions() {
+        try {
+            // Load provinces
+            const provResponse = await fetch(API_URL + '?options=provinsi');
+            const provResult = await provResponse.json();
+            
+            if (provResult.success && provResult.data.length > 0) {
+                const provSelect = document.getElementById('provinsi');
+                provResult.data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    provSelect.appendChild(opt);
+                });
+            }
+            
+            // Load diseases
+            const penyResponse = await fetch(API_URL + '?options=penyakit');
+            const penyResult = await penyResponse.json();
+            
+            if (penyResult.success && penyResult.data.length > 0) {
+                const penySelect = document.getElementById('penyakit');
+                penyResult.data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    penySelect.appendChild(opt);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading options:', error);
+        }
+    }
+    
+    // ================= API FUNCTIONS =================
+    async function loadData() {
+        try {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+            
+            if (result.success) {
+                allData = result.data;
+                loadFilterOptions();
+                renderTable(allData);
+            } else {
+                showToast('Gagal memuat data: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    function loadFilterOptions() {
+        const provinces = [...new Set(allData.map(row => row.provinsi))].sort();
+        const filterProvinsi = document.getElementById('filterProvinsi');
+        filterProvinsi.innerHTML = '<option value="">Semua Provinsi</option>';
+        provinces.forEach(p => {
+            filterProvinsi.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+    }
+    
+    // ================= RENDER TABLE =================
+    function renderTable(data) {
+        const tableContainer = document.getElementById('dataTable');
+        
+        if (data.length === 0) {
+            tableContainer.innerHTML = '<div class="loading">Tidak ada data</div>';
+            return;
+        }
+        
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Provinsi</th>
+                        <th>Penyakit</th>
+                        <th>Tahun</th>
+                        <th>Minggu</th>
+                        <th>Jumlah Kasus</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        data.forEach((row, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${row.provinsi}</strong></td>
+                    <td>${row.penyakit}</td>
+                    <td>${row.tahun}</td>
+                    <td>${row.minggu}</td>
+                    <td>${parseInt(row.jumlah_kasus).toLocaleString()}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editData(${row.id_provinsi}, '${row.provinsi}', '${row.penyakit}', ${row.tahun}, ${row.minggu}, ${row.jumlah_kasus})">Edit</button>
+                        <button class="btn-delete" onclick="deleteData(${row.id_provinsi})">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+    }
+    
+    // ================= FILTER =================
+    function filterData() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const tahunFilter = document.getElementById('filterTahun').value;
+        const provinsiFilter = document.getElementById('filterProvinsi').value;
+        
+        const filtered = allData.filter(row => {
+            const matchSearch = row.provinsi.toLowerCase().includes(searchTerm) || row.penyakit.toLowerCase().includes(searchTerm);
+            const matchTahun = tahunFilter === '' || row.tahun.toString() === tahunFilter;
+            const matchProvinsi = provinsiFilter === '' || row.provinsi === provinsiFilter;
+            return matchSearch && matchTahun && matchProvinsi;
+        });
+        
+        renderTable(filtered);
+    }
+    
+    // ================= MODAL =================
+    function openModal() {
+        isEditMode = false;
+        editId = null;
+        document.getElementById('modalTitle').textContent = 'Tambah Data Kasus Provinsi';
+        document.getElementById('kasusForm').reset();
+        document.getElementById('tahun').value = '2026';
+        document.getElementById('minggu').value = '1';
+        
+        // Reset dropdowns to show placeholder
+        document.getElementById('provinsi').value = '';
+        document.getElementById('penyakit').value = '';
+        
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+    
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+    
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modalOverlay')) {
+            closeModal();
+        }
+    });
+    
+    // ================= CRUD OPERATIONS =================
+    async function saveData() {
+        const provinsi = document.getElementById('provinsi').value;
+        const penyakit = document.getElementById('penyakit').value;
+        const tahun = document.getElementById('tahun').value;
+        const minggu = document.getElementById('minggu').value;
+        const jumlah_kasus = document.getElementById('jumlah_kasus').value;
+        
+        // Validation
+        if (!provinsi || !penyakit || !tahun || !minggu || !jumlah_kasus) {
+            showToast('Mohon lengkapi semua field', 'error');
+            return;
+        }
+        
+        try {
+            let response, result;
+            
+            if (isEditMode && editId) {
+                // PUT - Update
+                response = await fetch(API_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_provinsi: editId,
+                        provinsi: provinsi,
+                        penyakit: penyakit,
+                        tahun: parseInt(tahun),
+                        minggu: parseInt(minggu),
+                        jumlah_kasus: parseInt(jumlah_kasus)
+                    })
+                });
+            } else {
+                // POST - Create
+                response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provinsi: provinsi,
+                        penyakit: penyakit,
+                        tahun: parseInt(tahun),
+                        minggu: parseInt(minggu),
+                        jumlah_kasus: parseInt(jumlah_kasus)
+                    })
+                });
+            }
+            
+            result = await response.json();
+            
+            if (result.success) {
+                showToast(isEditMode ? 'Data berhasil diperbarui' : 'Data berhasil ditambahkan', 'success');
+                closeModal();
+                loadData();
+                loadDropdownOptions(); // Refresh dropdown options
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    function editData(id_provinsi, provinsi, penyakit, tahun, minggu, jumlah_kasus) {
+        isEditMode = true;
+        editId = id_provinsi;
+        document.getElementById('modalTitle').textContent = 'Edit Data Kasus Provinsi';
+        document.getElementById('provinsi').value = provinsi;
+        document.getElementById('penyakit').value = penyakit;
+        document.getElementById('tahun').value = tahun;
+        document.getElementById('minggu').value = minggu;
+        document.getElementById('jumlah_kasus').value = jumlah_kasus;
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+    
+    async function deleteData(id_provinsi) {
+        if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_provinsi: id_provinsi })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Data berhasil dihapus', 'success');
+                loadData();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    // ================= TOAST =================
+    function showToast(message, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast ' + type;
+        
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

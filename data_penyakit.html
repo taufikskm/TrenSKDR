@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Penyakit - CRUD Kasus Mingguan</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Additional styles for CRUD page */
+        .crud-container {
+            padding: 30px;
+        }
+        
+        .crud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .crud-header h2 {
+            color: #1a365d;
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .btn-add {
+            padding: 12px 25px;
+            background: linear-gradient(90deg, #38a169 0%, #48bb78 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56,161,105,0.4);
+        }
+        
+        .btn-edit {
+            padding: 8px 15px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: 0.3s;
+        }
+        
+        .btn-edit:hover {
+            background: #2c5282;
+        }
+        
+        .btn-delete {
+            padding: 8px 15px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #c53030;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(90deg, #2c5282 0%, #3182ce 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #3182ce;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn-save {
+            padding: 12px 30px;
+            background: #38a169;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-save:hover {
+            background: #2f855a;
+        }
+        
+        .btn-cancel {
+            padding: 12px 30px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-cancel:hover {
+            background: #cbd5e0;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideInRight 0.3s ease;
+            display: none;
+        }
+        
+        .toast.success {
+            background: #38a169;
+            display: block;
+        }
+        
+        .toast.error {
+            background: #e53e3e;
+            display: block;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Status badge */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge.new {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+        
+        .status-badge.updated {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+        
+        /* Search and filter */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .filter-box select {
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .pagination-info {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .pagination-btn {
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .pagination-btn:hover:not(:disabled) {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination-btn.active {
+            background: #3182ce;
+            color: white;
+            border-color: #3182ce;
+        }
+        
+        .pagination-btn.active:hover {
+            background: #2c5282;
+        }
+        
+        .pagination-pages {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .page-info {
+            color: #4a5568;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<div id="sidebar" class="sidebar">
+
+<div class="sidebar-header">
+<h2>🩺 SKDR</h2>
+<p>Sistem Kewaspadaan Dini dan Respon</p>
+</div>
+
+<nav class="sidebar-nav">
+<a href="index.html">🏠 Dashboard Penyakit</a>
+<a href="data_penyakit.html" class="active">📋 Data Penyakit</a>
+<a href="dashboard_provinsi.html">🗺️ Dashboard Provinsi</a>
+<a href="data_provinsi.html">📊 Data Provinsi</a>
+</nav>
+
+<div class="sidebar-footer">
+<p>Made by</p>
+<h4><a href="https://www.instagram.com/muhtof" target="_blank" style="color:white;text-decoration:none;">Taufik</a></h4>
+</div>
+
+</div>
+
+<!-- ================= MAIN ================= -->
+<div id="main" class="main">
+    <!-- ===== TOP HEADER ===== -->
+    <header class="main-header">
+        <button id="toggleBtn" class="hamburger">☰</button>
+        <div class="header-title">
+            <h1>Data Kasus Mingguan Penyakit</h1>
+            <p>Kelola data kasus penyakit mingguan</p>
+        </div>
+        <div class="header-date" id="currentDate"></div>
+    </header>
+
+    <!-- ===== CRUD CONTENT ===== -->
+    <div class="crud-container">
+        <div class="crud-header">
+            <h2>📋 Manajemen Data Kasus Mingguan</h2>
+            <button class="btn-add" onclick="openModal()">
+                <span>+</span> Tambah Data
+            </button>
+        </div>
+        
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Cari penyakit..." oninput="filterData()">
+            </div>
+            <div class="filter-box">
+                <select id="filterTahun" onchange="filterData()">
+                    <option value="">Semua Tahun</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div class="filter-box">
+                <select id="filterPenyakit" onchange="filterData()">
+                    <option value="">Semua Penyakit</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="data-table-section" style="margin: 0;">
+            <div class="table-container" id="dataTable">
+                <div class="loading">Loading data...</div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <div class="pagination-info" id="paginationInfo">
+                Menampilkan 0-0 dari 0 data
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="prevBtn" onclick="prevPage()">← Previous</button>
+                <div class="pagination-pages" id="paginationPages"></div>
+                <button class="pagination-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Tambah Data Kasus</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="kasusForm">
+                <input type="hidden" id="id_kasus">
+                
+                <div class="form-group">
+                    <label>Penyakit</label>
+                    <select id="id_penyakit" required>
+                        <option value="">Pilih Penyakit</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tahun</label>
+                        <input type="number" id="tahun" min="2020" max="2030" value="2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Minggu</label>
+                        <input type="number" id="minggu" min="1" max="52" value="1" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Jumlah Kasus</label>
+                    <input type="number" id="jumlah_kasus" min="0" placeholder="Masukkan jumlah kasus" required>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Batal</button>
+            <button class="btn-save" onclick="saveData()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ================= CONFIG =================
+    // Use relative paths for API endpoints
+    const API_URL = './api/kasus_mingguan.php';
+    const PENYAKIT_API = './api/penyakit.php';
+    
+    // ================= STATE =================
+    let allData = [];
+    let penyakitList = [];
+    let isEditMode = false;
+    
+    // ================= SIDEBAR =================
+    const toggleBtn = document.getElementById("toggleBtn");
+    const sidebar = document.getElementById("sidebar");
+    const main = document.getElementById("main");
+    
+    toggleBtn.onclick = () => {
+        sidebar.classList.toggle("hide");
+        main.classList.toggle("full");
+    };
+    
+    // ================= INIT =================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set current date
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById("currentDate").textContent = now.toLocaleDateString('id-ID', options);
+        
+        // Load initial data
+        loadPenyakit();
+        loadData();
+    });
+    
+    // ================= API FUNCTIONS =================
+    async function loadPenyakit() {
+        try {
+            const response = await fetch(PENYAKIT_API);
+            const result = await response.json();
+            
+            if (result.success) {
+                penyakitList = result.data;
+                
+                // Populate dropdown in filter
+                const filterPenyakit = document.getElementById('filterPenyakit');
+                filterPenyakit.innerHTML = '<option value="">Semua Penyakit</option>';
+                penyakitList.forEach(p => {
+                    filterPenyakit.innerHTML += `<option value="${p.nama_penyakit}">${p.nama_penyakit}</option>`;
+                });
+                
+                // Populate dropdown in modal
+                const idPenyakit = document.getElementById('id_penyakit');
+                idPenyakit.innerHTML = '<option value="">Pilih Penyakit</option>';
+                penyakitList.forEach(p => {
+                    idPenyakit.innerHTML += `<option value="${p.id_penyakit}">${p.nama_penyakit}</option>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading penyakit:', error);
+            showToast('Gagal memuat data penyakit', 'error');
+        }
+    }
+    
+    async function loadData() {
+        try {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+            
+            if (result.success) {
+                allData = result.data;
+                renderTable(allData);
+            } else {
+                showToast('Gagal memuat data: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    // ================= RENDER TABLE =================
+    function renderTable(data) {
+        const tableContainer = document.getElementById('dataTable');
+        
+        if (data.length === 0) {
+            tableContainer.innerHTML = '<div class="loading">Tidak ada data</div>';
+            return;
+        }
+        
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Penyakit</th>
+                        <th>Tahun</th>
+                        <th>Minggu</th>
+                        <th>Jumlah Kasus</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        data.forEach((row, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${row.nama_penyakit}</strong></td>
+                    <td>${row.tahun}</td>
+                    <td>${row.minggu}</td>
+                    <td>${parseInt(row.jumlah_kasus).toLocaleString()}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editData(${row.id_kasus}, ${row.id_penyakit}, '${row.nama_penyakit}', ${row.tahun}, ${row.minggu}, ${row.jumlah_kasus})">Edit</button>
+                        <button class="btn-delete" onclick="deleteData(${row.id_kasus})">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        tableContainer.innerHTML = html;
+    }
+    
+    // ================= FILTER =================
+    function filterData() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const tahunFilter = document.getElementById('filterTahun').value;
+        const penyakitFilter = document.getElementById('filterPenyakit').value;
+        
+        const filtered = allData.filter(row => {
+            const matchSearch = row.nama_penyakit.toLowerCase().includes(searchTerm);
+            const matchTahun = tahunFilter === '' || row.tahun.toString() === tahunFilter;
+            const matchPenyakit = penyakitFilter === '' || row.nama_penyakit === penyakitFilter;
+            
+            return matchSearch && matchTahun && matchPenyakit;
+        });
+        
+        renderTable(filtered);
+    }
+    
+    // ================= MODAL =================
+    function openModal() {
+        isEditMode = false;
+        document.getElementById('modalTitle').textContent = 'Tambah Data Kasus';
+        document.getElementById('kasusForm').reset();
+        document.getElementById('id_kasus').value = '';
+        document.getElementById('tahun').value = '2026';
+        document.getElementById('minggu').value = '1';
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+    
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+    
+    // Close modal on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modalOverlay')) {
+            closeModal();
+        }
+    });
+    
+    // ================= CRUD OPERATIONS =================
+    async function saveData() {
+        const id_kasus = document.getElementById('id_kasus').value;
+        const id_penyakit = document.getElementById('id_penyakit').value;
+        const tahun = document.getElementById('tahun').value;
+        const minggu = document.getElementById('minggu').value;
+        const jumlah_kasus = document.getElementById('jumlah_kasus').value;
+        
+        // Validation
+        if (!id_penyakit || !tahun || !minggu || !jumlah_kasus) {
+            showToast('Mohon lengkapi semua field', 'error');
+            return;
+        }
+        
+        const data = {
+            id_penyakit: parseInt(id_penyakit),
+            tahun: parseInt(tahun),
+            minggu: parseInt(minggu),
+            jumlah_kasus: parseInt(jumlah_kasus)
+        };
+        
+        let url = API_URL;
+        let method = 'POST';
+        
+        if (isEditMode) {
+            data.id_kasus = parseInt(id_kasus);
+            url = API_URL;
+            method = 'PUT';
+        }
+        
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(isEditMode ? 'Data berhasil diperbarui' : 'Data berhasil ditambahkan', 'success');
+                closeModal();
+                loadData();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    function editData(id_kasus, id_penyakit, nama_penyakit, tahun, minggu, jumlah_kasus) {
+        isEditMode = true;
+        document.getElementById('modalTitle').textContent = 'Edit Data Kasus';
+        document.getElementById('id_kasus').value = id_kasus;
+        document.getElementById('id_penyakit').value = id_penyakit;
+        document.getElementById('tahun').value = tahun;
+        document.getElementById('minggu').value = minggu;
+        document.getElementById('jumlah_kasus').value = jumlah_kasus;
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+    
+    async function deleteData(id_kasus) {
+        if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id_kasus: id_kasus })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Data berhasil dihapus', 'success');
+                loadData();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting data:', error);
+            showToast('Gagal terhubung ke server', 'error');
+        }
+    }
+    
+    // ================= TOAST =================
+    function showToast(message, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast ' + type;
+        
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>
+    
